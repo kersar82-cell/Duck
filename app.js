@@ -8,8 +8,8 @@
 // SUPABASE CONFIGURATION
 // Replace these with your project values.
 // ===============================
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://wbcumflmcdwltdmyzmnr.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_GsAjyHnOOZYrd_uCS5hbZQ_TXdgtT8q";
 
 const CONFIG_OK = SUPABASE_URL && SUPABASE_ANON_KEY &&
   !SUPABASE_URL.includes("YOUR_SUPABASE_URL") &&
