@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDUBEMI — Educational Institution Portal</title>
+<meta name="description" content="EDUBEMI - Admissions, Notices, Leaderboard and more.">
+
+<!-- Tailwind CSS (CDN, zero-build) -->
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<!-- Supabase JS Client (CDN, zero-build) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+<!-- CONFIG WARNING BANNER -->
+<div id="configBanner" class="hidden bg-amber-100 text-amber-900 text-sm text-center px-3 py-2 border-b border-amber-300">
+  ⚠ Supabase is not configured yet. Edit <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> at the top of <code>app.js</code>.
+</div>
+
+<!-- HEADER -->
+<header class="sticky top-0 z-40 bg-white border-b border-gray-200">
+  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+    <button id="logoBtn" data-view="home" class="font-extrabold text-xl text-indigo-600 tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded">EDUBEMI</button>
+    <button id="menuToggle" aria-expanded="false" aria-controls="mainNav" aria-label="Toggle navigation menu" class="p-2 rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+      <svg id="hamburgerIcon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+  <nav id="mainNav" class="hidden border-t border-gray-200 bg-white max-h-[75vh] overflow-y-auto" aria-label="Main navigation">
+    <ul class="max-w-5xl mx-auto px-2 py-2 flex flex-col text-sm" id="navList">
+      <li><button data-view="login" class="nav-link" id="navLogin">Login</button></li>
+      <li><button data-view="signup" class="nav-link hidden" id="navSignupLink">Sign Up</button></li>
+      <li><button data-view="notice" class="nav-link">Notice</button></li>
+      <li><button data-view="admission" class="nav-link">New Admission</button></li>
+      <li><button data-view="leaderboard" class="nav-link">Leaderboard</button></li>
+      <li><button data-view="location" class="nav-link">Location</button></li>
+      <li><button data-view="about" class="nav-link">About</button></li>
+      <li><button data-view="contact" class="nav-link">Contact</button></li>
+      <li><button data-view="admin" class="nav-link hidden" id="navAdmin">Admin Dashboard</button></li>
+      <li><button id="navLogout" class="nav-link hidden text-red-600">Logout</button></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="max-w-5xl mx-auto w-full px-4 py-6 flex-1">
+
+  <!-- HOME VIEW -->
+  <section id="view-home" class="view">
+    <div class="bg-indigo-600 text-white rounded-xl p-6 sm:p-8 mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold mb-2" id="homeSiteName">EDUBEMI</h1>
+      <p class="text-indigo-100 mb-1 max-w-xl text-sm sm:text-base">EDUBEMI is a simple, modern school management portal for admissions, notices, and student performance tracking.</p>
+      <p class="italic text-indigo-200 mb-4" id="homeSlogan">"Knowledge lights the path to tomorrow."</p>
+      <button data-view="admission" class="nav-link-force inline-block bg-white text-indigo-700 font-semibold px-4 py-2 rounded-lg hover:bg-indigo-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">New Admission</button>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-semibold">Recent Notices</h2>
+          <button data-view="notice" class="nav-link-force text-xs text-indigo-600 hover:underline">View all</button>
+        </div>
+        <div id="homeNoticePreview" class="space-y-2 text-sm"><p class="text-gray-400">Loading...</p></div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-semibold">Top 5 This Week</h2>
+          <button data-view="leaderboard" class="nav-link-force text-xs text-indigo-600 hover:underline">Full leaderboard</button>
+        </div>
+        <div id="homeLeaderboardPreview" class="space-y-2 text-sm"><p class="text-gray-400">Loading...</p></div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <h2 class="font-semibold mb-2">Location</h2>
+        <p class="text-sm text-gray-600" id="homeAddress">X, X, X</p>
+        <a id="homeMapsBtn" href="#" target="_blank" rel="noopener" class="inline-block mt-2 text-xs text-indigo-600 hover:underline">Open in Google Maps →</a>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <h2 class="font-semibold mb-2">Contact</h2>
+        <p class="text-sm">📞 <a id="homePhone" href="#" class="text-indigo-600 hover:underline">PHONE_PLACEHOLDER</a></p>
+        <p class="text-sm">✉️ <a id="homeEmail" href="#" class="text-indigo-600 hover:underline">EMAIL_PLACEHOLDER</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGIN VIEW -->
+  <section id="view-login" class="view hidden">
+    <h1 class="text-xl font-bold mb-4">Login</h1>
+    <form id="loginForm" class="max-w-sm bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+      <div>
+        <label for="loginEmail" class="block text-sm font-medium mb-1">Email</label>
+        <input type="email" id="loginEmail" required class="form-input" autocomplete="email">
+      </div>
+      <div>
+        <label for="loginPassword" class="block text-sm font-medium mb-1">Password</label>
+        <input type="password" id="loginPassword" required minlength="6" class="form-input" autocomplete="current-password">
+      </div>
+      <p id="loginError" class="text-sm text-red-600 hidden" role="alert"></p>
+      <div class="flex items-center gap-3">
+        <button type="submit" id="loginBtn" class="btn-primary">Login</button>
+        <button type="button" data-view="signup" class="nav-link-force text-sm text-indigo-600 hover:underline">Sign Up</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- SIGNUP VIEW -->
+  <section id="view-signup" class="view hidden">
+    <h1 class="text-xl font-bold mb-4">Create Account</h1>
+    <form id="signupForm" class="max-w-sm bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+      <div>
+        <label for="signupName" class="block text-sm font-medium mb-1">Full Name</label>
+        <input type="text" id="signupName" required class="form-input">
+      </div>
+      <div>
+        <label for="signupProfession" class="block text-sm font-medium mb-1">Profession</label>
+        <input type="text" id="signupProfession" class="form-input" placeholder="e.g. Teacher, Trader">
+      </div>
+      <div>
+        <label for="signupEmail" class="block text-sm font-medium mb-1">Email</label>
+        <input type="email" id="signupEmail" required class="form-input" autocomplete="email">
+      </div>
+      <div>
+        <label for="signupPassword" class="block text-sm font-medium mb-1">Password</label>
+        <input type="password" id="signupPassword" required minlength="6" class="form-input" autocomplete="new-password">
+      </div>
+      <div>
+        <label for="signupRole" class="block text-sm font-medium mb-1">Role</label>
+        <select id="signupRole" class="form-input">
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+          <option value="parent">Parent</option>
+        </select>
+      </div>
+      <p id="signupError" class="text-sm text-red-600 hidden" role="alert"></p>
+      <p id="signupSuccess" class="text-sm text-green-600 hidden" role="status"></p>
+      <div class="flex items-center gap-3">
+        <button type="submit" id="signupBtn" class="btn-primary">Sign Up</button>
+        <button type="button" data-view="login" class="nav-link-force text-sm text-indigo-600 hover:underline">Have an account? Login</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- NOTICE VIEW -->
+  <section id="view-notice" class="view hidden">
+    <h1 class="text-xl font-bold mb-4">Notices</h1>
+    <div id="noticeList" class="space-y-3"><p class="text-gray-400 text-sm">Loading...</p></div>
+  </section>
+
+  <!-- ADMISSION VIEW -->
+  <section id="view-admission" class="view hidden">
+    <h1 class="text-xl font-bold mb-1">New Admission</h1>
+    <p class="text-sm text-gray-500 mb-4">Fill the form below to apply for admission.</p>
+
+    <form id="admissionForm" class="bg-white border border-gray-200 rounded-xl p-5 space-y-6 max-w-xl">
+      <fieldset class="space-y-3">
+        <legend class="font-semibold mb-1">Student Information</legend>
+        <div>
+          <label for="studentName" class="block text-sm font-medium mb-1">Student Name</label>
+          <input type="text" id="studentName" required class="form-input">
+        </div>
+        <div>
+          <label for="studentAddress" class="block text-sm font-medium mb-1">Student Address</label>
+          <input type="text" id="studentAddress" required class="form-input">
+        </div>
+        <div>
+          <label for="studentClass" class="block text-sm font-medium mb-1">Student Class</label>
+          <select id="studentClass" required class="form-input">
+            <option value="">Loading classes...</option>
+          </select>
+        </div>
+        <div>
+          <label for="studentPhone" class="block text-sm font-medium mb-1">Student Phone Number</label>
+          <input type="tel" id="studentPhone" required class="form-input" placeholder="080XXXXXXXX">
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class="font-semibold mb-1">Guardian Information</legend>
+        <div id="guardiansContainer" class="space-y-3"></div>
+        <button type="button" id="addGuardianBtn" class="text-sm text-indigo-600 hover:underline">+ Add Another Guardian</button>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class="font-semibold mb-1">Study Type</legend>
+        <div class="flex gap-4 text-sm">
+          <label class="flex items-center gap-1"><input type="radio" name="studyType" value="monthly" checked> Monthly</label>
+          <label class="flex items-center gap-1"><input type="radio" name="studyType" value="course"> Course</label>
+        </div>
+        <div id="monthlyFeeSection" class="text-sm bg-indigo-50 border border-indigo-100 rounded-lg p-3">
+          Monthly Fee: <span id="monthlyFeeAmount" class="font-semibold">Select a class above</span>
+        </div>
+        <div id="courseSection" class="hidden space-y-2">
+          <div id="courseListContainer" class="grid sm:grid-cols-2 gap-3"><p class="text-gray-400 text-sm">Loading courses...</p></div>
+        </div>
+        <p class="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">💳 Payment will be made after joining/studying.</p>
+      </fieldset>
+
+      <p id="admissionError" class="text-sm text-red-600 hidden" role="alert"></p>
+      <p id="admissionSuccess" class="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3 hidden" role="status"></p>
+      <button type="submit" id="admissionSubmitBtn" class="btn-primary">Submit Application</button>
+    </form>
+
+    <div id="myAdmissionsWrap" class="hidden mt-8 max-w-xl">
+      <h2 class="font-semibold mb-2">My Admission Status</h2>
+      <div id="myAdmissions" class="space-y-2 text-sm"></div>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD VIEW -->
+  <section id="view-leaderboard" class="view hidden">
+    <h1 class="text-xl font-bold mb-4">Top 5 Students of the Week</h1>
+    <div id="leaderboardList" class="grid sm:grid-cols-2 gap-3"><p class="text-gray-400 text-sm">Loading...</p></div>
+  </section>
+
+  <!-- LOCATION VIEW -->
+  <section id="view-location" class="view hidden">
+    <h1 class="text-xl font-bold mb-4">Our Location</h1>
+    <div class="bg-white border border-gray-200 rounded-xl p-5 max-w-md space-y-2">
+      <p class="font-semibold" id="locationName">EDUBEMI</p>
+      <p class="text-sm text-gray-600" id="locationAddress">X, X, X</p>
+      <a id="locationMapsBtn" href="#" target="_blank" rel="noopener" class="btn-primary inline-block mt-2">Open in Google Maps</a>
+    </div>
+  </section>
+
+  <!-- ABOUT VIEW -->
+  <section id="view-about" class="view hidden">
+    <h1 class="text-xl font-bold mb-4">About EDUBEMI</h1>
+    <div class="bg-white border border-gray-200 rounded-xl p-5 max-w-xl space-y-3 text-sm leading-relaxed">
+      <p>EDUBEMI is a lightweight educational portal that helps institutions manage admissions, notices and student performance in one place.</p>
+      <p><strong>Purpose:</strong> Make school administration simple for staff and transparent for students and parents.</p>
+      <p><strong>Mission:</strong> Provide accessible, affordable and reliable education management tools for every institution.</p>
+    </div>
+  </section>
+
+  <!-- CONTACT VIEW -->
+  <section id="view-contact" class="view hidden">
+    <h1 class="text-xl font-bold mb-4">Contact Us</h1>
+    <div class="bg-white border border-gray-200 rounded-xl p-5 max-w-md space-y-2 text-sm">
+      <p>📞 Phone: <a id="contactPhone" href="#" class="text-indigo-600 hover:underline">PHONE_PLACEHOLDER</a></p>
+      <p>✉️ Email: <a id="contactEmail" href="#" class="text-indigo-600 hover:underline">EMAIL_PLACEHOLDER</a></p>
+      <p>📍 Address: <span id="contactAddress">X, X, X</span></p>
+    </div>
+  </section>
+
+  <!-- ADMIN VIEW -->
+  <section id="view-admin" class="view hidden">
+    <h1 class="text-xl font-bold mb-4">Admin Dashboard</h1>
+
+    <div class="flex flex-wrap gap-2 mb-4 text-sm" id="adminTabs">
+      <button data-tab="overview" class="admin-tab-btn">Overview</button>
+      <button data-tab="admissions" class="admin-tab-btn">Admissions</button>
+      <button data-tab="courses" class="admin-tab-btn">Courses</button>
+      <button data-tab="fees" class="admin-tab-btn">Fees</button>
+      <button data-tab="notices" class="admin-tab-btn">Notices</button>
+      <button data-tab="leaderboard" class="admin-tab-btn">Leaderboard</button>
+      <button data-tab="users" class="admin-tab-btn">Users</button>
+      <button data-tab="settings" class="admin-tab-btn">Settings</button>
+    </div>
+
+    <!-- Overview -->
+    <div id="admintab-overview" class="admintab grid sm:grid-cols-3 gap-3">
+      <div class="stat-card"><p class="stat-label">Pending Admissions</p><p id="statPending" class="stat-value">—</p></div>
+      <div class="stat-card"><p class="stat-label">Approved Admissions</p><p id="statApproved" class="stat-value">—</p></div>
+      <div class="stat-card"><p class="stat-label">Total Admissions</p><p id="statTotal" class="stat-value">—</p></div>
+      <div class="stat-card"><p class="stat-label">Total Users</p><p id="statUsers" class="stat-value">—</p></div>
+      <div class="stat-card"><p class="stat-label">Active Courses</p><p id="statCourses" class="stat-value">—</p></div>
+      <div class="stat-card"><p class="stat-label">Notices</p><p id="statNotices" class="stat-value">—</p></div>
+    </div>
+
+    <!-- Admissions -->
+    <div id="admintab-admissions" class="admintab hidden">
+      <div class="flex flex-wrap gap-2 mb-3 items-end">
+        <div>
+          <label for="admissionSearch" class="block text-xs font-medium mb-1">Search name</label>
+          <input id="admissionSearch" class="form-input !py-1.5 !w-48" placeholder="Student name">
+        </div>
+        <div>
+          <label for="admissionFilterStatus" class="block text-xs font-medium mb-1">Status</label>
+          <select id="admissionFilterStatus" class="form-input !py-1.5 !w-40">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <button id="admissionFilterBtn" class="btn-secondary">Apply</button>
+      </div>
+      <div id="admissionsTableWrap" class="overflow-x-auto"><p class="text-gray-400 text-sm">Loading...</p></div>
+    </div>
+
+    <!-- Courses -->
+    <div id="admintab-courses" class="admintab hidden">
+      <button id="addCourseBtn" class="btn-primary mb-3">+ Add Course</button>
+      <div id="coursesTableWrap" class="overflow-x-auto"><p class="text-gray-400 text-sm">Loading...</p></div>
+    </div>
+
+    <!-- Fees -->
+    <div id="admintab-fees" class="admintab hidden">
+      <button id="addFeeBtn" class="btn-primary mb-3">+ Add Class Fee</button>
+      <div id="feesTableWrap" class="overflow-x-auto"><p class="text-gray-400 text-sm">Loading...</p></div>
+    </div>
+
+    <!-- Notices -->
+    <div id="admintab-notices" class="admintab hidden">
+      <button id="addNoticeBtn" class="btn-primary mb-3">+ Add Notice</button>
+      <div id="noticesTableWrap" class="overflow-x-auto"><p class="text-gray-400 text-sm">Loading...</p></div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="admintab-leaderboard" class="admintab hidden">
+      <button id="addLeaderBtn" class="btn-primary mb-3">+ Add Student</button>
+      <div id="leaderTableWrap" class="overflow-x-auto"><p class="text-gray-400 text-sm">Loading...</p></div>
+    </div>
+
+    <!-- Users -->
+    <div id="admintab-users" class="admintab hidden">
+      <div id="usersTableWrap" class="overflow-x-auto"><p class="text-gray-400 text-sm">Loading...</p></div>
+    </div>
+
+    <!-- Settings -->
+    <div id="admintab-settings" class="admintab hidden max-w-md">
+      <form id="settingsForm" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+        <div><label class="block text-sm font-medium mb-1" for="setSiteName">Site Name</label><input id="setSiteName" class="form-input"></div>
+        <div><label class="block text-sm font-medium mb-1" for="setSlogan">Slogan</label><input id="setSlogan" class="form-input"></div>
+        <div><label class="block text-sm font-medium mb-1" for="setPhone">Phone</label><input id="setPhone" class="form-input"></div>
+        <div><label class="block text-sm font-medium mb-1" for="setEmail">Email</label><input id="setEmail" class="form-input"></div>
+        <div><label class="block text-sm font-medium mb-1" for="setAddress">Address</label><input id="setAddress" class="form-input"></div>
+        <div><label class="block text-sm font-medium mb-1" for="setMapsUrl">Google Maps URL</label><input id="setMapsUrl" class="form-input"></div>
+        <button type="submit" class="btn-primary">Save Settings</button>
+        <p id="settingsMsg" class="text-sm hidden"></p>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="text-center text-xs text-gray-400 py-4 border-t border-gray-200">
+  © <span id="footerYear"></span> EDUBEMI. All rights reserved.
+</footer>
+
+<!-- GENERIC MODAL -->
+<dialog id="formModal" class="rounded-xl p-0 w-full max-w-md backdrop:bg-black/40">
+  <div class="p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 id="modalTitle" class="font-semibold text-lg">Form</h3>
+      <button id="modalCloseBtn" aria-label="Close" class="text-gray-500 hover:text-gray-800">✕</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</dialog>
+
+<!-- TOAST -->
+<div id="toast" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-sm text-white shadow-lg max-w-[90vw] text-center"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
